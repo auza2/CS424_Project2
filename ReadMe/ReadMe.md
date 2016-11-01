@@ -11,6 +11,8 @@ Visual Analytic Technique: Abish Malik, Shehzad Afzal, Erin Hodgess, David S. Eb
 
 Video: https://www.youtube.com/watch?v=9yHssyE9ubM&feature=youtu.be
 
+How to open: Download as zip. Extract. Open chicago(1)fi.html as IE or FF.
+
 Work Done:
 Jamie: Made map, found visualization technique.
 Noah: Pie Chart, algorithm for cluster. 
