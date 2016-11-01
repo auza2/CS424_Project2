@@ -8,3 +8,11 @@ Our visualization technique of spatial clustering is better equipped for the tas
 
  
 Visual Analytic Technique: Abish Malik, Shehzad Afzal, Erin Hodgess, David S. Ebert, Ross Maciejewski, "VACCINATED — Visual analytics for characterizing a pandemic spread VAST 2010 Mini Challenge 2 award: Support for future detection", Visual Analytics Science and Technology (VAST) 2010 IEEE Symposium on, pp. 281-282, 2010.
+
+Video: https://www.youtube.com/watch?v=9yHssyE9ubM&feature=youtu.be
+
+Work Done:
+Jamie: Made map, found visualization technique.
+Noah: Pie Chart, algorithm for cluster. 
+Jacky: Bar Chart, insert crimes and schools.
+All: Found dataset. Color.
