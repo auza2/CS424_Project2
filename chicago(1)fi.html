@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+#mapChart{
+	position:absolute;
+	top:10px;
+	left:10px;
+	width:400px;
+	height:400px;
+
+}
+#barChart
+{
+	position:absolute;
+	top:160px;
+	left:410px;
+	height:250px;
+}
+
+.zipcode {
+  stroke: steelblue;
+  fill: #FFF;
+}
+text.big-text{
+  font-size: 30px;
+  font-weight: 400;
+}
+text{
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 300;
+}
+
+div.tooltip {   
+  position: absolute;           
+  text-align: center;           
+  width: 60px;                  
+  height: 28px;                 
+  padding: 2px;             
+  font: 12px sans-serif;        
+  background: lightsteelblue;   
+  border: 0px;      
+  border-radius: 8px;           
+  pointer-events: none;         
+}
+.map-layer {
+  fill: #fff;
+  stroke: #aaa;
+}
+</style>
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+  //Load the files
+var margin = {top: 20, right: 20, bottom: 30, left: 40}
+var width = 960,
+    height = 500,
+    centered;
+
+var projection = d3.geoAlbers()
+  .center([0, 41.83])
+  .rotate([87.65, 0])
+  .parallels([40, 45])
+  .scale(60000)
+  .translate([width/2, height/2])
+
+var path = d3.geoPath()
+  .projection(projection);
+
+// Set svg width & height
+var svg = d3.select('svg')
+  .attr('width', width)
+  .attr('height', height);
+
+// Add background
+svg.append('rect')
+  .attr('class', 'background')
+  .attr('width', width)
+  .attr('height', height)
+  //.on('click', clicked);
+
+var g = svg.append('g');
+
+var mapLayer = g.append('g')
+  .classed('map-layer', true);
+
+var xAxis = d3.scaleBand()
+          .range([0, width])
+          .padding(0.1);
+
+var yAxis = d3.scaleLinear()
+.range([height, 0]);
+
+var div = d3.select("body").append("div")   
+    .attr("class", "tooltip")               
+    .style("opacity", 0);
+// Get province name
+function nameFn(d){
+  return d && d.properties ? d.properties.community : null;
+}
+
+  //Load in GeoJSON data
+  d3.json("chicago_communities.geojson", function(error,json) {
+/*
+
+    //Width and height
+    var width = 900;
+    var height = 450;
+
+    // create a first guess for the projection
+    var center = d3.geo.centroid(json)
+    var scale = 150;
+    var projection = d3.geo.mercator().scale(scale).center(center);
+    //Define path generator
+    var path = d3.geo.path()
+                    .projection(projection);
+
+    // using the path determine the bounds of the current map and use
+    // these to determine better values for the scale and translation
+   
+/*
+    // new projection
+    projection = d3.geo.mercator().center(center)
+     .scale(scale * 0.9).translate(offset);
+    path = path.projection(projection);
+*/
+
+    //Create SVG element
+/*
+   var svg = d3.select('svg')
+      .attr('width', width)
+      .attr('height', height);
+*/
+    var svg = d3.select(".chart")
+                 .attr("width", width)
+                 .attr("height", height)
+	
+	var bar = svg.append('svg').attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+ .append("g")
+    .attr("transform", 
+          "translate(" + margin.right + "," + margin.bottom + ")");
+	
+    var g = svg.append('g');
+
+	
+	
+    mapLayer = g.append('g')
+      .classed('map-layer', true);
+
+
+   bigText = g.append('text')
+     .classed('big-text', true)
+     .attr('x', 0)
+     .attr('y', 50);
+
+   hoverText = g.append('text')
+     .classed('big-text', true)
+     .attr('x', 0)
+     .attr('y', 25);
+
+    //Bind data and create one path per GeoJSON feature
+    mapLayer.selectAll("path")
+      .data(json.features)
+      .enter()
+      .append("path")
+      .attr("d", path)
+      .attr("class", "zipcode")
+      .attr('vector-effect', 'non-scaling-stroke')
+      .style('fill', d3.rgb("#007AFF"))
+      .on('mouseover', function(d){
+           d3.select(this).style('fill', d3.rgb("#cc0099"));
+
+           var text = nameFn(d);
+           //console.log(text);
+
+           hoverText
+             .style("font-family", "sans-serif")
+             .text(text + " " + d.properties.area_numbe)
+             .attr("font-size", "100px")
+             .attr("fill", "red");
+                
+		   d3.csv("testing2.csv", function(error, data) {
+					var rows = data;
+					var rows2 = [];
+	
+					rows.forEach(function(e){
+						
+						if (e["Community Area"] == d.properties.area_numbe)
+						{
+							rows2.push(e);
+						}
+					})
+					
+					var dataset = [["THEFT", 0],
+								   ["MOTOR VEHICLE THEFT", 0],
+								   ["ASSAULT", 0],
+								   ["ROBBERY", 0],
+								   ["HOMICIDE", 0],
+								   ["BURGLARY", 0],
+								   ["OTHER", 0]];;
+								   
+				    for(var i = 0; i < dataset.length; i++)
+					{
+						svg.append("text")
+						  .text(dataset[i][0])
+						  .attr("x",30)
+						  .attr("y", 100 + (50*i))
+						  .attr("font-family", "helvetica")
+						  .attr("font-size", "10px")
+						  .attr("fill", "black")
+					}
+					
+					for(var i = 0; i < dataset.length; i++)
+					{
+						svg.append("rect")
+						  .attr("x",10)
+						  .attr("y", 92 + (50*i))
+						  .attr("width", 10)
+						  .attr("height", 10)
+						  .attr("stroke", "black")
+						  .attr("stroke-width", 2)
+						  .style("fill",function(d){
+							if (i == 0)
+								return "teal";
+							else if (i == 1)
+								return "yellow";
+							else if (i == 2)
+								return "blue";
+							else if (i == 3)
+								return "purple";
+							else if (i == 4)
+								return "red";
+							else if (i == 5)
+								return "cyan";
+							else
+								return "green";
+						  });
+
+					}
+					
+					rows2.forEach(function(e){		
+						for (var i = 0; i < dataset.length; i++){			
+							if (dataset[i][0] == e["Primary Type"]){
+								dataset[i][1]++;
+								break;
+							}				
+							if (i == (dataset.length-1)){
+								dataset[i][1]++;
+								break;
+							}	
+						}		
+				    })
+					
+					console.log(dataset[0])
+					console.log(dataset[1])
+					console.log(dataset[2])
+					console.log(dataset[3])
+					console.log(dataset[4])
+					console.log(dataset[5])
+					console.log(dataset[6])
+					console.log(rows2.length)
+					
+					svg.append("circle")
+					  .attr("cx", 250)
+					  .attr("cy", 250)
+					  .attr("r", 100)
+					  .attr("stroke", "black")
+					  .attr("stroke-width", 2)
+					  .style("fill","silver");
+
+					var angleInRadians = function(d) {
+										  return d * Math.PI / 180.0;
+										}
+
+					var calcX = function(a) {
+								 return 250 + (100 * Math.cos(angleInRadians(a+270)));
+							   }
+					var calcY = function(a) {
+								 return 250 + (100 * Math.sin(angleInRadians(a+270)));
+							   }
+
+					var calcR = function(d) {
+								  return 100/5 * d;
+								}
+								
+					var rotation = 0;
+									  
+					var changeRotate = function(d) {
+											var temp = rotation + d;
+											var rotate = "rotate(" + rotation + " 250 250)";
+											rotation = temp;
+											return rotate;
+									   }
+
+					var total = rows2.length;
+					
+					var check = 0;
+					
+					for (var i = 0; i < dataset.length; i++)
+					{
+						if (dataset[i][1] > 0)
+						{
+							check++;
+						}
+					}
+					
+					var flag = function(d){
+						if (d/total > .5){
+							return 1;
+						}
+						else{
+							return 0;
+						}
+					}
+					
+					console.log(check);
+					
+					if (total == 0){
+					}
+					else if (check == 1){
+					var color = "";
+					dataset.forEach(function(e){
+						if (e[1] >= 1)
+						{
+							if ("THEFT" == e[0])
+								color = "teal";
+							else if ("MOTOR VEHICLE THEFT" == e[0])
+								color = "yellow";
+							else if ("ASSAULT" == e[0])
+								color = "blue";
+							else if ("ROBBERY" == e[0])
+								color = "purple";
+							else if ("HOMICIDE" == e[0])
+								color = "red";
+							else if ("BURGLARY" == e[0])
+								color = "cyan";
+							else
+								color = "green";
+						}
+					});
+					
+					svg.append("circle")
+					  .attr("cx", 250)
+					  .attr("cy", 250)
+					  .attr("r", 100)
+					  .attr("stroke", "black")
+					  .attr("stroke-width", 2)
+					  .style("fill",color);
+					}
+					else if (total > 1){
+					dataset.forEach(function(e){
+				   svg.append("path")
+					  .attr("d", function(d) {return "M 250 250" + 
+								 " L 250 150 " +
+								 "A 100 100 0 " + flag(e[1]) + " 1 " + calcX(360/total*e[1]) + " " + calcY(360/total*e[1]) + 
+								 "Z";})
+					  .attr("stroke-width", 1)
+					  .attr("stroke", "black")
+					  .attr("fill", function(d) {
+							if ("THEFT" == e[0])
+								return "teal";
+							else if ("MOTOR VEHICLE THEFT" == e[0])
+								return "yellow";
+							else if ("ASSAULT" == e[0])
+								return "blue";
+							else if ("ROBBERY" == e[0])
+								return "purple";
+							else if ("HOMICIDE" == e[0])
+								return "red";
+							else if ("BURGLARY" == e[0])
+								return "cyan";
+							else
+								return "green";
+					  })
+					  .attr("transform", function(d) {return changeRotate(360/total*e[1])})
+					  .on("mouseover", function(d) {
+      d3.select(this)
+          
+      svg.append("text")
+          .text(function() {
+                var str = "";
+                str = e[1];              
+                return str;  
+                  })
+          .attr("id", "test")
+          .attr("x",225)
+          .attr("y",400)
+          .attr("font-family", "helvetica")
+          .attr("font-size", "16px")
+          .attr("fill", "black")
+  })
+  .on("mouseout", function() {
+          
+      d3.select("#test").remove();
+  });
+					})
+					}
+					
+			})
+				
+				})
+      .on('mouseout', function(d){
+              // Reset province color
+             d3.select(this).style('fill', d3.rgb("#007AFF"));
+
+             // Clear province name
+             hoverText.text('');
+       })
+      .on('click',function(d){
+          var x, y, k;
+
+         // Compute centroid of the selected path
+         if (d && centered !== d) {
+           var centroid = path.centroid(d);
+           x = centroid[0];
+           y = centroid[1];
+           k = 4;
+           centered = d;
+         } else {
+           x = width / 2;
+           y = height / 2;
+           k = 1;
+           centered = null;
+         }
+
+         console.log("yay you clicked " + nameFn(d));
+         bigText
+             .style("font-family", "sans-serif")
+             .text(nameFn(d))
+             .attr("font-size", "100px")
+             .attr("fill", "red");
+                
+
+         d3.select(this).attr("stroke-width", 6)
+      });
+	d3.queue()
+		.defer(d3.csv, "progress20133.csv") 
+		.await(makeChart);
+	function makeChart(error, data)
+	{	
+	d3.csv("progress20133.csv", function(error, data) 
+	{
+		svg.selectAll("circles")
+		.data(data)
+		.enter()
+		.append("circle")
+		.attr("r",3.5)
+		.style("fill",function(d)
+		{
+			if(d.Involved == 'Strong')
+				return 'orange';
+				else if (d.Involved == 'Neutral')
+				return 'yellow';
+				else
+				return 'red'
+
+		})
+		.attr("transform", function(d) {return "translate(" + projection([d.Latitude,d.Longitude]) + ")";})
+		.append("svg:title")
+  .text(function(d) { return "School:" +d.ShortName; });
+		var chart1 = d3.select("body")
+     .append("svg")
+     .attr("width", width + margin.left + margin.right)
+     .attr("height", height + margin.top + margin.bottom)
+     .append("g")
+     .attr("class","chart")
+     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	 
+		 xAxis.domain(data.map(function(d) { return d.ShortName; }));
+			  yAxis.domain([0, d3.max(data, function(d) { return d.Misconducts1; })]);
+			  chart1.append("g")
+				  .attr("transform", "translate(0," + height + ")")
+				  .call(d3.axisBottom(xAxis));
+
+			  // add the y Axis
+			  chart1.append("g")
+				  .call(d3.axisLeft(yAxis));
+				  
+		chart1.selectAll("rects")
+		.data(data)
+		.enter()
+		.append("rect")
+		.style("fill","goldenrod")
+		.attr("class", "bar")
+		.attr("x",function(d){return xAxis(d.ShortName) })
+		.attr("width", xAxis.bandwidth())
+		.attr("y",function(d){return yAxis(d.Misconducts1)} )
+		.attr("height",function(d){return height - yAxis(d.Misconducts1)} )
+		.append("svg:title")
+  .text(function(d) { return " Misconduct %:" +  d.Misconducts1; })
+				  
+	
+	});
+	}
+	d3.csv("loc22.csv", function(error, data) 
+	{
+		var temp = data;
+		var dataset2 = [];
+		var inc = 0;
+		while (temp.length != 0)
+		{
+			dataset2.push([temp[0]["Latitude"],temp[0]["Longitude"],1]);
+			temp.splice(0,1);
+			var check = [];
+			temp.forEach(function(e){
+				if (e["Latitude"] == dataset2[inc][1] && 
+					e["Longitude"] == dataset2[inc][1]){
+						dataset2[inc][2]++;
+						check.push(temp.indexOf(e));
+					}
+				else if (parseFloat(e["Latitude"]) <= parseFloat(dataset2[inc][0])+0.01 && 
+					parseFloat(e["Latitude"]) >= parseFloat(dataset2[inc][0])-0.01 &&
+					parseFloat(e["Longitude"]) <= parseFloat(dataset2[inc][1])+0.01 &&
+					parseFloat(e["Longitude"]) >= parseFloat(dataset2[inc][1])-0.01){						
+						dataset2[inc][2]++;
+						check.push(temp.indexOf(e));
+					}
+			})
+			for(var i = 0;i < check.length;i++){
+				 temp.splice(check[i]-i,1);
+			}
+			inc++;
+		}
+		
+		dataset2.forEach(function(e){
+		svg.append("circle")
+		.attr("r",function(d){return .05*e[2]})
+		.style("fill","green")
+		.attr("stroke", "black")
+		.attr("stroke-width", 1)
+		
+		.attr("transform", function(d) {return "translate(" + projection([e[1],e[0]]) + ")";})
+		.append("svg:title")
+		.text(function(d) { return e[2] });
+		})
+	});
+  });
+
+function clicked(d) {
+  var x, y, k;
+
+  // Compute centroid of the selected path
+  if (d && centered !== d) {
+    var centroid = path.centroid(d);
+    x = centroid[0];
+    y = centroid[1];
+    k = 4;
+    centered = d;
+  } else {
+    x = width / 2;
+    y = height / 2;
+    k = 1;
+    centered = null;
+  }
+
+  console.log("yay you clicked " + nameFn(d));
+
+  d3.select(this).attr("stroke-width", 6)
+
+}
+
+
+// Get province color
+function fillFn(d){
+  return  color("#7743CE");
+}
+
+function mouseover(d){
+  // Highlight hovered province
+  d3.select(this).style('fill', 'blue');
+
+  var text = nameFn(d);
+  //console.log(text);
+
+  bigText
+    .style("font-family", "sans-serif")
+    .text(text)
+    .attr("font-size", "100px")
+    .attr("fill", "red");
+}
+
+function mouseout(d){
+  // Reset province color
+  d3.select(this).style('fill', 'green');
+
+  // Clear province name
+  bigText.text('');
+}
+
+
+</script>
+
+<body>
+  <svg class="chart"></svg>
+</body>
